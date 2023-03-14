@@ -15,10 +15,14 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @Slf4j
 public class TelegramBot extends TelegramLongPollingBot {
-    private static final String HELP_TEXT = " This bot is created to demonstrate Spring capabilities.\n\n" +
-        "You can execute commands from the main menu on the left or by typing a command:\n\n" +
-        "Type /start to see a welcome message\n\n" +
-        "Type /help to see this message again";
+    private static final String HELP_TEXT = " Привіт!\n\nДаний бот буде корисним для будь-якої людини, " +
+        "яка користується Telegram і хоче ефективно використовувати свій час. " +
+        "\n\nВін стане незамінним помічником для тих, хто займається бізнесом, планує важливі зустрічі та дедлайни, " +
+        "студентів, які мають багато різних завдань та проєктів, а також для всіх, " +
+        "хто просто хоче покращити свою продуктивність та організованість прямо в Telegram. \n\n" +
+        "Ви можете виконати команди з головного меню зліва або набравши команду:\n\n" +
+        "Натисни /start аби розпочати роботу бота\n\n" +
+        "Натисни /help щоб отримати дане повідомлення знову";
     final BotConfig config;
     private final UserRepository userRepository;
     private final UserController userController;
