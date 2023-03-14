@@ -1,0 +1,15 @@
+package com.hryshko.reminder.telegram.bot.enums;
+
+public enum Position {
+    INPUT_USERNAME,
+    INPUT_PHONE_NUMBER,
+    REGISTERED,
+    INPUT_REMINDER_TEXT,
+    INPUT_REMINDER_DATA,
+    INPUT_REMINDER_TIME,
+
+    UPDATE_REMINDER_TEXT,
+    UPDATE_REMINDER_TIME,
+    UPDATE_REMINDER_DATA
+
+}
