@@ -95,7 +95,7 @@ public class BotServiceImpl implements BotService {
             var user = userRepository.findById(chatId).get();
             String data = user.getRegisteredAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 
-            answer = "Your information\n\nFirst name: " + user.getFirstName() + "\n" +
+            answer = "Ось що ми знаємо про тебе:\n\nІм'я: " + user.getFirstName() + "\n" +
                 "Username: @" + chat.getUserName() + "\n" +
                 "Спількуєшся з ботом з: " + data + "\n" +
                 "Твій номер телефону: " + user.getPhoneNumber();
