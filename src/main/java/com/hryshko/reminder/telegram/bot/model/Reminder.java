@@ -3,6 +3,8 @@ package com.hryshko.reminder.telegram.bot.model;
 
 import com.hryshko.reminder.telegram.bot.enums.Position;
 import com.hryshko.reminder.telegram.bot.enums.Status;
+import java.sql.Date;
+import java.sql.Time;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -33,7 +35,10 @@ public class Reminder {
     private String textOfReminder;
 
     @Column(name = "reminder_time")
-    private LocalDateTime reminderTime;
+    private Time reminderTime;
+
+    @Column(name = "reminder_date")
+    private Date reminderDate;
 
     @Column(name = "position")
     private Position position;

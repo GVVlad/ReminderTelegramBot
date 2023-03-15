@@ -1,10 +1,15 @@
 package com.hryshko.reminder.telegram.bot.controller;
 
 import com.hryshko.reminder.telegram.bot.enums.Position;
+import com.hryshko.reminder.telegram.bot.enums.Status;
+import com.hryshko.reminder.telegram.bot.model.Reminder;
 import com.hryshko.reminder.telegram.bot.model.User;
+import com.hryshko.reminder.telegram.bot.repository.ReminderRepository;
 import com.hryshko.reminder.telegram.bot.repository.UserRepository;
 import com.hryshko.reminder.telegram.bot.service.BotService;
 import com.hryshko.reminder.telegram.bot.service.UserService;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -13,19 +18,22 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
-
 @Component
 @Slf4j
 public class UserController {
     private final UserRepository userRepository;
     private final UserService userService;
+    private final ReminderController reminderController;
+    private final ReminderRepository reminderRepository;
     private final BotService botService;
 
     public UserController(UserRepository userRepository, UserService userService,
+                          ReminderController reminderController, ReminderRepository reminderRepository,
                           BotService botService) {
         this.userRepository = userRepository;
         this.userService = userService;
-
+        this.reminderController = reminderController;
+        this.reminderRepository = reminderRepository;
         this.botService = botService;
     }
 
@@ -66,7 +74,21 @@ public class UserController {
                     break;
 
             }
+
+
         }
+
+        List<Reminder> optional = reminderRepository
+            .findAll()
+            .stream()
+            .filter(r -> r.getStatus().equals(Status.IN_PROGRESS)).collect(Collectors.toList());
+
+        if (!optional.isEmpty()) {
+            for (Reminder reminder : optional) {
+                reminderController.createNewReminder(reminder, message, pollingBot);
+            }
+        }
+
     }
 
 
