@@ -89,6 +89,16 @@ public class UserController {
             }
         }
 
+        optional = reminderRepository
+            .findAll()
+            .stream()
+            .filter(r -> r.getStatus().equals(Status.UPDATE)).collect(Collectors.toList());
+
+        if (!optional.isEmpty()) {
+            for (Reminder reminder : optional) {
+                reminderController.updateReminder(reminder, message, pollingBot);
+            }
+        }
     }
 
 

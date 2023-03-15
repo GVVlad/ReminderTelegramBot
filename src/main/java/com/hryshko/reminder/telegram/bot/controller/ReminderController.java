@@ -151,6 +151,53 @@ public class ReminderController {
 
     }
 
+    public void updateReminder(Reminder reminder, Message message, TelegramLongPollingBot pollingBot) {
+        if (reminder.getUser().getChatId() == message.getChatId()) {
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+
+            row.add(InlineKeyboardButton.builder()
+                .text("Змінити текст")
+                .callbackData("updateText")
+                .build());
+
+            row.add(InlineKeyboardButton.builder()
+                .text("Змінити дату")
+                .callbackData("updateDataTime")
+                .build());
+
+            keyboard.add(row);
+
+            keyboard.add(Collections.singletonList(InlineKeyboardButton.builder()
+                .text("Підтвердити і зберігти")
+                .callbackData("updated")
+                .build()));
+
+            switch (reminder.getPosition()) {
+                case UPDATE_REMINDER_TEXT:
+                    reminder.setTextOfReminder(message.getText());
+                    reminder.setStatus(Status.CREATED);
+                    reminder.setPosition(Position.REGISTERED);
+
+                    reminderService.update(reminder);
+
+                    showInformationAboutReminder(reminder, message, keyboard, pollingBot);
+                    break;
+
+                case UPDATE_REMINDER_DATA:
+                    setReminderData(message, reminder, Position.UPDATE_REMINDER_TIME, pollingBot);
+                    break;
+
+                case UPDATE_REMINDER_TIME:
+                    setReminderTime(message, reminder, keyboard, pollingBot);
+                    break;
+
+            }
+        }
+
+
+    }
+
     public void setReminderData(Message message, Reminder reminder, Position position,
                                 TelegramLongPollingBot pollingBot) {
         DateTimeFormatter formatter = getFormatter("yyyy-MM-dd");

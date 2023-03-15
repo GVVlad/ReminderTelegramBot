@@ -62,7 +62,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
+
                 reminderController.startReminding(TelegramBot.this);
+
             }
         }, 0, 60000);
 
