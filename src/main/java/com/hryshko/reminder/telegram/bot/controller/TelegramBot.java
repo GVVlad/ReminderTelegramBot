@@ -44,6 +44,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final UserController userController;
     private final ReminderController reminderController;
     private final BotService botService;
+    private final Timer timer = new Timer();
 
 
     @Autowired
@@ -57,6 +58,13 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.userController = userController;
         this.reminderController = reminderController;
         this.botService = botService;
+
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                reminderController.startReminding(TelegramBot.this);
+            }
+        }, 0, 60000);
 
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "Розпочати роботу!"));
