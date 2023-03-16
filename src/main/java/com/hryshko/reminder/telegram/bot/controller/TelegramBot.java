@@ -101,6 +101,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                 menu(update, update.getMessage().getChatId());
             }
 
+        } else if (update.hasCallbackQuery()) {
+            reminderController.callBackQuery(update.getCallbackQuery(), this);
+
         }
 
     }

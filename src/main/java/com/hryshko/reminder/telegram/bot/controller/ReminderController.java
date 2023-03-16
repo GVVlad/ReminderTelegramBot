@@ -282,6 +282,117 @@ public class ReminderController {
         }
     }
 
+    public String getTitleFromBackQuery(CallbackQuery callbackQuery) {
+        String delete = callbackQuery.getMessage().getText()
+            .substring(callbackQuery.getMessage().getText().length() - 18);
+
+        return callbackQuery.getMessage().getText()
+            .replaceAll("Інформація про нагадування:\n\nТекст нагадування:\n", "")
+            .replace(delete, "")
+            .replaceAll("\n\nЧас нагадування: ", "");
+
+    }
+
+
+    public void callBackQuery(CallbackQuery callbackQuery, TelegramLongPollingBot pollingBot) {
+
+        if (callbackQuery.getData().equals("delete")) {
+            Reminder reminder = reminderService.findByTextName(getTitleFromBackQuery(callbackQuery));
+
+            reminderService.removeReminder(reminder.getId());
+
+            botService.sendEditedMessage(callbackQuery.getMessage().getChatId(),
+                callbackQuery.getMessage().getMessageId(),
+                "Нагадування було видалено успішно!",
+                pollingBot);
+
+        }
+
+        if (callbackQuery.getData().equals("confirm")) {
+            botService.sendEditedMessage(callbackQuery.getMessage().getChatId(),
+                callbackQuery.getMessage().getMessageId(),
+                "Нагадування було успішно створено!",
+                pollingBot);
+        }
+
+        if (callbackQuery.getData().equals("skip")) {
+            botService.deleteSentMessage(callbackQuery.getMessage().getChatId(),
+                callbackQuery.getMessage().getMessageId(),
+                pollingBot);
+        }
+
+        if (callbackQuery.getData().equals("update")) {
+            Reminder reminder = reminderService.findByTextName(getTitleFromBackQuery(callbackQuery));
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+
+            botService.sendMessage(callbackQuery.getMessage().getChatId(),
+                "Процес редагування нагадування розпочато",
+                pollingBot);
+
+            row.add(InlineKeyboardButton.builder()
+                .text("Змінити текст")
+                .callbackData("updateText")
+                .build());
+
+            row.add(InlineKeyboardButton.builder()
+                .text("Змінити дату")
+                .callbackData("updateDataTime")
+                .build());
+
+            keyboard.add(row);
+            showInformationAboutReminder(reminder, callbackQuery.getMessage(), keyboard, pollingBot);
+        }
+
+        if (callbackQuery.getData().equals("updateText")) {
+            Reminder reminder = reminderService.findByTextName(getTitleFromBackQuery(callbackQuery));
+            reminder.setStatus(Status.UPDATE);
+            reminder.setPosition(Position.UPDATE_REMINDER_TEXT);
+            reminderService.update(reminder);
+
+            botService.sendEditedMessage(reminder.getUser().getChatId(), callbackQuery.getMessage().getMessageId(),
+                "Введи новий текст для нагадування", pollingBot);
+        }
+
+        if (callbackQuery.getData().equals("updateDataTime")) {
+            Reminder reminder = reminderService.findByTextName(getTitleFromBackQuery(callbackQuery));
+            reminder.setStatus(Status.UPDATE);
+            reminder.setPosition(Position.UPDATE_REMINDER_DATA);
+            reminderService.update(reminder);
+
+            botService.sendEditedMessage(reminder.getUser().getChatId(), callbackQuery.getMessage().getMessageId(),
+                "Введи нову дату для нагадування", pollingBot);
+        }
+
+        if (callbackQuery.getData().equals("updated")) {
+            botService.sendEditedMessage(callbackQuery.getMessage().getChatId(),
+                callbackQuery.getMessage().getMessageId(),
+                "Нагадування було успішно оновлено!",
+                pollingBot);
+        }
+
+        if (callbackQuery.getData().equals("moveToFive")) {
+            Reminder reminder = reminderService.findByTextName(callbackQuery.getMessage().getText());
+            LocalTime newTime = reminder.getReminderTime().toLocalTime().plusMinutes(5);
+            reminder.setReminderTime(Time.valueOf(newTime));
+            reminderService.update(reminder);
+
+            botService.sendEditedMessage(callbackQuery.getMessage().getChatId(),
+                callbackQuery.getMessage().getMessageId(), "Нагадування було відкладено на 5 хвилин",
+                pollingBot);
+        }
+
+        if (callbackQuery.getData().equals("finished")) {
+            Reminder reminder = reminderService.findByTextName(callbackQuery.getMessage().getText());
+            reminderService.removeReminder(reminder.getId());
+
+            botService.sendEditedMessage(callbackQuery.getMessage().getChatId(),
+                callbackQuery.getMessage().getMessageId(),
+                "Нагадування було підтверджено та видалено із списку",
+                pollingBot);
+        }
+    }
+
     public DateTimeFormatter getFormatter(String pattern) {
         return DateTimeFormatter.ofPattern(pattern);
     }
