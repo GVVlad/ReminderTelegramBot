@@ -1,11 +1,10 @@
-package com.hryshko.reminder.telegram.bot.model;
+package com.hryshko.reminder.telegram.entity;
 
 
-import com.hryshko.reminder.telegram.bot.enums.Position;
-import com.hryshko.reminder.telegram.bot.enums.Status;
+import com.hryshko.reminder.telegram.enums.Position;
+import com.hryshko.reminder.telegram.enums.Status;
 import java.sql.Date;
 import java.sql.Time;
-import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

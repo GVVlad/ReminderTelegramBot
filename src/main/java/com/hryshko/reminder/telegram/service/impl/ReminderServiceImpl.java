@@ -1,8 +1,8 @@
-package com.hryshko.reminder.telegram.bot.service.impl;
+package com.hryshko.reminder.telegram.service.impl;
 
-import com.hryshko.reminder.telegram.bot.model.Reminder;
-import com.hryshko.reminder.telegram.bot.repository.ReminderRepository;
-import com.hryshko.reminder.telegram.bot.service.ReminderService;
+import com.hryshko.reminder.telegram.entity.Reminder;
+import com.hryshko.reminder.telegram.repository.ReminderRepository;
+import com.hryshko.reminder.telegram.service.api.ReminderService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

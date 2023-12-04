@@ -1,6 +1,6 @@
-package com.hryshko.reminder.telegram.bot.service;
+package com.hryshko.reminder.telegram.service.api;
 
-import com.hryshko.reminder.telegram.bot.model.Reminder;
+import com.hryshko.reminder.telegram.entity.Reminder;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +11,6 @@ public interface ReminderService {
 
     List<Reminder> listReminders();
     List<Reminder> listRemindersByUsersId(long userId);
-
 
     void update(Reminder reminder);
 

@@ -1,6 +1,6 @@
-package com.hryshko.reminder.telegram.bot.repository;
+package com.hryshko.reminder.telegram.repository;
 
-import com.hryshko.reminder.telegram.bot.model.Reminder;
+import com.hryshko.reminder.telegram.entity.Reminder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

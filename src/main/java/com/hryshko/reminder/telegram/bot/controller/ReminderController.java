@@ -1,10 +1,10 @@
 package com.hryshko.reminder.telegram.bot.controller;
 
-import com.hryshko.reminder.telegram.bot.enums.Position;
-import com.hryshko.reminder.telegram.bot.enums.Status;
-import com.hryshko.reminder.telegram.bot.model.Reminder;
-import com.hryshko.reminder.telegram.bot.service.BotService;
-import com.hryshko.reminder.telegram.bot.service.ReminderService;
+import com.hryshko.reminder.telegram.enums.Position;
+import com.hryshko.reminder.telegram.enums.Status;
+import com.hryshko.reminder.telegram.entity.Reminder;
+import com.hryshko.reminder.telegram.service.api.BotService;
+import com.hryshko.reminder.telegram.service.api.ReminderService;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
@@ -30,7 +30,6 @@ public class ReminderController {
 
     private final ReminderService reminderService;
     private final BotService botService;
-
 
     public ReminderController(ReminderService reminderService,
                               BotService botService) {
@@ -194,8 +193,6 @@ public class ReminderController {
 
             }
         }
-
-
     }
 
     public void setReminderData(Message message, Reminder reminder, Position position,
@@ -292,7 +289,6 @@ public class ReminderController {
             .replaceAll("\n\nЧас нагадування: ", "");
 
     }
-
 
     public void callBackQuery(CallbackQuery callbackQuery, TelegramLongPollingBot pollingBot) {
 

@@ -1,4 +1,4 @@
-package com.hryshko.reminder.telegram.bot.enums;
+package com.hryshko.reminder.telegram.enums;
 
 public enum Status {
     IN_PROGRESS,

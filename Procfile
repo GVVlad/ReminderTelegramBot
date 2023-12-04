@@ -1,1 +1,0 @@
-web: java $JAVA_OPTS -cp target/classes:target/dependency/* com.hryshko.reminder.telegram.bot.ReminderTelegramBotApplication

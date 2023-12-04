@@ -1,7 +1,7 @@
-package com.hryshko.reminder.telegram.bot.service.impl;
+package com.hryshko.reminder.telegram.service.impl;
 
-import com.hryshko.reminder.telegram.bot.repository.UserRepository;
-import com.hryshko.reminder.telegram.bot.service.BotService;
+import com.hryshko.reminder.telegram.repository.UserRepository;
+import com.hryshko.reminder.telegram.service.api.BotService;
 import com.vdurmont.emoji.EmojiParser;
 import java.time.format.DateTimeFormatter;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.hryshko.reminder.telegram.bot.service;
+package com.hryshko.reminder.telegram.service.api;
 
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

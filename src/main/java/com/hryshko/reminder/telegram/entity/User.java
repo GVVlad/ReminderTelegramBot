@@ -1,7 +1,7 @@
-package com.hryshko.reminder.telegram.bot.model;
+package com.hryshko.reminder.telegram.entity;
 
 
-import com.hryshko.reminder.telegram.bot.enums.Position;
+import com.hryshko.reminder.telegram.enums.Position;
 import java.time.LocalDateTime;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -31,8 +31,6 @@ public class User {
     @Column(name = "first_name")
     private String firstName;
 
-    @Column(name = "last_name")
-    private String lastName;
 
     @Column(name = "user_name")
     private String userName;
@@ -48,5 +46,5 @@ public class User {
 
 
     @Column(name = "status")
-    private Position position;
+    private String position;
 }
