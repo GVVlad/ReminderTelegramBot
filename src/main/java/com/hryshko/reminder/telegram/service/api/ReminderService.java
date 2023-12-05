@@ -1,6 +1,9 @@
 package com.hryshko.reminder.telegram.service.api;
 
 import com.hryshko.reminder.telegram.entity.Reminder;
+import com.hryshko.reminder.telegram.entity.User;
+import com.hryshko.reminder.telegram.enums.Position;
+import com.hryshko.reminder.telegram.enums.Status;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -19,4 +22,8 @@ public interface ReminderService {
     Reminder findByTextName(String text);
 
     void removeReminder(Long id);
+
+    Reminder findByUserAndPosition(Long userId, Position position);
+
+    Reminder findByUserAndStatus(Long userId, Status status);
 }

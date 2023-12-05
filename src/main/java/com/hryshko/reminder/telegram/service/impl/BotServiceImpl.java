@@ -4,6 +4,7 @@ import com.hryshko.reminder.telegram.repository.UserRepository;
 import com.hryshko.reminder.telegram.service.api.BotService;
 import com.vdurmont.emoji.EmojiParser;
 import java.time.format.DateTimeFormatter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -14,13 +15,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Service
+@RequiredArgsConstructor
 public class BotServiceImpl implements BotService {
 
     private final UserRepository userRepository;
-
-    public BotServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public void sendMessageWithReplyKeyBoard(long chatId, String textToSend, ReplyKeyboard markup,

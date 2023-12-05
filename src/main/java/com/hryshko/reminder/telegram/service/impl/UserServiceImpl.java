@@ -4,23 +4,19 @@ import com.hryshko.reminder.telegram.entity.User;
 import com.hryshko.reminder.telegram.repository.UserRepository;
 import com.hryshko.reminder.telegram.service.api.UserService;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
 
     @Override
     public void addUser(User user) {
         userRepository.save(user);
     }
-
 
     @Override
     public User findUserByChatId(Long chatId) {

@@ -4,9 +4,7 @@ import com.hryshko.reminder.telegram.bot.TelegramBot;
 import com.hryshko.reminder.telegram.constants.ButtonConstants;
 import com.hryshko.reminder.telegram.constants.MessageConstants;
 import com.hryshko.reminder.telegram.entity.User;
-import com.hryshko.reminder.telegram.enums.Position;
 import com.hryshko.reminder.telegram.service.api.UserService;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,12 +27,18 @@ public class CommandProcessor {
     private final TelegramBot telegramBot;
     private final UserService userService;
 
-    public CommandProcessor(@Lazy TelegramBot telegramBot, UserService userService) {
+    public CommandProcessor(@Lazy TelegramBot telegramBot,
+                            @Lazy ReminderProcessor reminderProcessor,
+                            @Lazy UserProcessor userProcessor,
+                            UserService userService) {
         this.telegramBot = telegramBot;
         this.userService = userService;
         commandMap.put(ButtonConstants.START, this::startCommand);
-        commandMap.put(ButtonConstants.REGISTRATION, this::registrationCommand);
-
+        commandMap.put(ButtonConstants.REGISTRATION, userProcessor::registrationCommand);
+        commandMap.put(ButtonConstants.ADD_REMINDER, reminderProcessor::createNewRemindCommand);
+        commandMap.put(ButtonConstants.SHOW_REMINDERS, reminderProcessor::getAllRemindsCommand);
+        commandMap.put(ButtonConstants.USER_INFO, userProcessor::userInformationCommand);
+        commandMap.put(ButtonConstants.HELP, this::helpCommand);
     }
 
     public void processCommand(String command, Long chatId, Update update) {
@@ -58,7 +62,7 @@ public class CommandProcessor {
             keyboard.add(List.of(regButton));
             keyboardMarkup.setKeyboard(keyboard);
             sendMessage.setReplyMarkup(keyboardMarkup);
-        }else {
+        } else {
             sendMessage.setText(MessageConstants.START_MESSAGE_REG);
             sendMessage.setReplyMarkup(getMenuKeyBoard());
         }
@@ -66,58 +70,10 @@ public class CommandProcessor {
         telegramBot.sendMessage(sendMessage);
     }
 
-    private void registrationCommand(Long chatId, Update update) {
-        if(userService.findUserByChatId(chatId) == null) {
-
-            User user = User.builder()
-                .chatId(chatId)
-                .userName(update.getCallbackQuery().getMessage().getChat().getUserName())
-                .firstName(update.getCallbackQuery().getMessage().getFrom().getFirstName())
-                .registeredAt(LocalDateTime.now())
-                .position(Position.INPUT_USERNAME.toString())
-                .build();
-
-            userService.addUser(user);
-
-            telegramBot.sendMessage(new SendMessage(chatId.toString(), MessageConstants.REG_ENTER_NAME));
-        } else {
-            User user = userService.findUserByChatId(chatId);
-            if(user.getPosition().equals(Position.INPUT_USERNAME.toString())) {
-                user.setFirstName(update.getMessage().getText());
-                user.setPosition(Position.INPUT_PHONE_NUMBER.toString());
-
-                SendMessage sendMessage = new SendMessage();
-
-                sendMessage.setChatId(chatId);
-                sendMessage.setText(MessageConstants.REG_ENTER_PHONE_NUMBER);
-                sendMessage.setReplyMarkup(ReplyKeyboardMarkup.builder()
-                    .oneTimeKeyboard(true)
-                    .resizeKeyboard(true)
-                    .keyboardRow(new KeyboardRow() {{
-                        add(KeyboardButton.builder()
-                            .text(ButtonConstants.SEND_PHONE)
-                            .requestContact(true)
-                            .build());
-                    }})
-                    .build());
-                userService.update(user);
-                telegramBot.sendMessage(sendMessage);
-            } else if(user.getPosition().equals(Position.INPUT_PHONE_NUMBER.toString())) {
-                if(update.getMessage().hasContact()) {
-                    user.setPhoneNumber(update.getMessage().getContact().getPhoneNumber());
-                    user.setPosition(Position.REGISTERED.toString());
-                    userService.update(user);
-
-                    telegramBot.sendMessage(new SendMessage(chatId.toString(), MessageConstants.REG_FINISHED));
-                }else {
-                    telegramBot.sendMessage(new SendMessage(chatId.toString(), MessageConstants.REG_PHONE_ERROR));
-                    telegramBot.sendMessage(new SendMessage(chatId.toString(), MessageConstants.REG_ENTER_PHONE_NUMBER));
-                }
-            }
-        }
+    private void helpCommand(Long chatId, Update update) {
     }
 
-    private ReplyKeyboardMarkup getMenuKeyBoard() {
+    public ReplyKeyboardMarkup getMenuKeyBoard() {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboardRows = new ArrayList<>();
         replyKeyboardMarkup.setResizeKeyboard(true);

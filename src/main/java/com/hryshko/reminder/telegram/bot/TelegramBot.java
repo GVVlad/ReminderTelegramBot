@@ -2,7 +2,9 @@ package com.hryshko.reminder.telegram.bot;
 
 import com.hryshko.reminder.telegram.constants.ButtonConstants;
 import com.hryshko.reminder.telegram.enums.Position;
+import com.hryshko.reminder.telegram.enums.Status;
 import com.hryshko.reminder.telegram.service.CommandProcessor;
+import com.hryshko.reminder.telegram.service.api.ReminderService;
 import com.hryshko.reminder.telegram.service.api.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -17,15 +19,16 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class TelegramBot extends TelegramLongPollingBot {
     private final CommandProcessor commandProcessor;
     private final UserService userService;
+    private final ReminderService reminderService;
     @Value("${bot.name}")
     private String botUsername;
 
-
     public TelegramBot(@Value("${bot.token}") String botToken, CommandProcessor commandProcessor,
-                       UserService userService) {
+                       UserService userService, ReminderService reminderService) {
         super(botToken);
         this.commandProcessor = commandProcessor;
         this.userService = userService;
+        this.reminderService = reminderService;
     }
 
     @Override
@@ -49,13 +52,14 @@ public class TelegramBot extends TelegramLongPollingBot {
         } else if(command.equals(ButtonConstants.REGISTRATION) && userService.findUserByChatId(chatId) == null) {
             commandProcessor.processCommand(ButtonConstants.REGISTRATION, chatId, update);
         } else if(userService.findUserByChatId(chatId) != null &&
-            !userService.findUserByChatId(chatId).getPosition().equals(
-                Position.REGISTERED.toString()) || update.getMessage().hasContact()) {
+            (!userService.findUserByChatId(chatId).getPosition().equals(
+                Position.REGISTERED.toString()) || update.getMessage().hasContact())) {
             commandProcessor.processCommand(ButtonConstants.REGISTRATION, chatId, update);
+        } else if(reminderService.findByUserAndStatus(chatId, Status.IN_PROGRESS) != null) {
+            commandProcessor.processCommand(ButtonConstants.ADD_REMINDER, chatId, update);
         } else {
             commandProcessor.processCommand(command, chatId, update);
         }
-
     }
 
     @Override

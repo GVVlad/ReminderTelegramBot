@@ -1,26 +1,29 @@
 package com.hryshko.reminder.telegram.service.impl;
 
 import com.hryshko.reminder.telegram.entity.Reminder;
+import com.hryshko.reminder.telegram.entity.User;
+import com.hryshko.reminder.telegram.enums.Position;
+import com.hryshko.reminder.telegram.enums.Status;
 import com.hryshko.reminder.telegram.repository.ReminderRepository;
 import com.hryshko.reminder.telegram.service.api.ReminderService;
+import com.hryshko.reminder.telegram.service.api.UserService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ReminderServiceImpl implements ReminderService {
 
+    public final UserService userService;
     private final ReminderRepository repository;
-
-    public ReminderServiceImpl(ReminderRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public Reminder createReminder(Reminder reminder) {
-        if (reminder != null) {
+        if(reminder != null) {
             return repository.save(reminder);
         } else {
             throw new NullPointerException("Cannot be null");
@@ -59,7 +62,7 @@ public class ReminderServiceImpl implements ReminderService {
             .filter(r -> r.getTextOfReminder().equals(text))
             .findFirst();
 
-        if (optional.isPresent()) {
+        if(optional.isPresent()) {
             return optional.get();
         } else {
             throw new NullPointerException("Cannot find Reminder with given reminder's text");
@@ -69,5 +72,19 @@ public class ReminderServiceImpl implements ReminderService {
     @Override
     public void removeReminder(Long id) {
         repository.delete(findById(id));
+    }
+
+    @Override
+    public Reminder findByUserAndPosition(Long userId, Position position) {
+        User user = userService.findUserByChatId(userId);
+
+        return repository.findByUserAndPosition(user, position);
+    }
+
+    @Override
+    public Reminder findByUserAndStatus(Long userId, Status status) {
+        User user = userService.findUserByChatId(userId);
+
+        return repository.findByUserAndStatus(user, status);
     }
 }
