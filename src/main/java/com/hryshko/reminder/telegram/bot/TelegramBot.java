@@ -39,12 +39,15 @@ public class TelegramBot extends TelegramLongPollingBot {
             chatId = update.getMessage().getChatId();
             if(update.getMessage().hasText()) {
                 command = update.getMessage().getText();
+                System.out.println(command);
             } else {
-                command = "/reg";
+                command = ButtonConstants.REGISTRATION;
             }
         } else {
             chatId = update.getCallbackQuery().getFrom().getId();
             command = update.getCallbackQuery().getData();
+            System.out.println(command);
+
         }
 
         if(command.equals(ButtonConstants.START)) {
@@ -53,10 +56,19 @@ public class TelegramBot extends TelegramLongPollingBot {
             commandProcessor.processCommand(ButtonConstants.REGISTRATION, chatId, update);
         } else if(userService.findUserByChatId(chatId) != null &&
             (!userService.findUserByChatId(chatId).getPosition().equals(
-                Position.REGISTERED.toString()) || update.getMessage().hasContact())) {
+                Position.REGISTERED.toString()) || (update.hasMessage() && update.getMessage().hasContact()))) {
             commandProcessor.processCommand(ButtonConstants.REGISTRATION, chatId, update);
         } else if(reminderService.findByUserAndStatus(chatId, Status.IN_PROGRESS) != null) {
             commandProcessor.processCommand(ButtonConstants.ADD_REMINDER, chatId, update);
+        } else if(command.contains(ButtonConstants.UPDATE)) {
+            commandProcessor.processCommand(ButtonConstants.UPDATE, chatId, update);
+        } else if(reminderService.findByStatusAndPosition(Status.UPDATE, Position.UPDATE_REMINDER_TEXT) != null &&
+            !command.equals(ButtonConstants.CONFIRM)) {
+            commandProcessor.processCommand(ButtonConstants.UPDATE_TEXT, chatId, update);
+        } else if((reminderService.findByStatusAndPosition(Status.UPDATE, Position.UPDATE_REMINDER_DATA) != null ||
+            reminderService.findByStatusAndPosition(Status.UPDATE, Position.UPDATE_REMINDER_TIME) != null) &&
+            !command.equals(ButtonConstants.CONFIRM)) {
+            commandProcessor.processCommand(ButtonConstants.UPDATE_DATA, chatId, update);
         } else {
             commandProcessor.processCommand(command, chatId, update);
         }

@@ -11,6 +11,7 @@ import com.hryshko.reminder.telegram.service.api.UserService;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -39,44 +41,109 @@ public class ReminderProcessor {
         if(reminder == null) {
             createNewRemind(chatId);
         } else {
-            if(reminder.getStatus().equals(Status.IN_PROGRESS) &&
-                reminder.getPosition().equals(Position.INPUT_REMINDER_TEXT)) {
+            if(reminder.getStatus().equals(Status.IN_PROGRESS.toString()) &&
+                reminder.getPosition().equals(Position.INPUT_REMINDER_TEXT.toString())) {
                 setReminderText(reminder, Position.INPUT_REMINDER_DATA, chatId, update);
-            } else if(reminder.getStatus().equals(Status.IN_PROGRESS) &&
-                reminder.getPosition().equals(Position.INPUT_REMINDER_DATA)) {
+                telegramBot.sendMessage(
+                    SendMessage.builder().chatId(chatId).text(MessageConstants.REMINDER_ENTER_DATA).build());
+            } else if(reminder.getStatus().equals(Status.IN_PROGRESS.toString()) &&
+                reminder.getPosition().equals(Position.INPUT_REMINDER_DATA.toString())) {
                 setReminderData(reminder, Position.INPUT_REMINDER_TIME, chatId, update);
-            } else if(reminder.getStatus().equals(Status.IN_PROGRESS) &&
-                reminder.getPosition().equals(Position.INPUT_REMINDER_TIME)) {
+            } else if(reminder.getStatus().equals(Status.IN_PROGRESS.toString()) &&
+                reminder.getPosition().equals(Position.INPUT_REMINDER_TIME.toString())) {
                 setReminderTime(reminder, chatId, update);
             }
         }
     }
 
-//    public void updateRemindCommand(Long chatId, Update update) {
-//        Reminder reminder = reminderService.findById(Long.valueOf(update.getCallbackQuery().getData()));
-//        if(reminder.getStatus().equals(Status.CREATED)) {
-//            reminder.setStatus(Status.UPDATE);
-//            reminderService.update(reminder);
-//
-//
-//
-//        } else if(reminder.getStatus().equals(Status.UPDATE) &&
-//            reminder.getPosition().equals(Position.UPDATE_REMINDER_TEXT)) {
-//            setReminderText(reminder, Position.UPDATE_REMINDER_DATA, chatId, update);
-//        } else if(reminder.getStatus().equals(Status.UPDATE) &&
-//            reminder.getPosition().equals(Position.UPDATE_REMINDER_DATA)) {
-//            setReminderData(reminder, Position.UPDATE_REMINDER_TIME, chatId, update);
-//        } else if(reminder.getStatus().equals(Status.UPDATE) &&
-//            reminder.getPosition().equals(Position.UPDATE_REMINDER_TIME)) {
-//            setReminderTime(reminder, chatId, update);
-//        }
-//    }
+    public void updateReminderTextCommand(Long chatId, Update update) {
+
+        Reminder reminder = reminderService.findByStatusAndPosition(Status.UPDATE, Position.UPDATE_REMINDER_TEXT);
+
+        if(reminder != null) {
+            setReminderText(reminder, Position.REGISTERED, chatId, update);
+            showInformationAboutReminder(reminder, chatId, getUpdateButtons(reminder.getId()));
+        }
+    }
+
+    public void updateReminderDateCommand(Long chatId, Update update) {
+        Reminder reminder = reminderService.findByStatusAndPosition(Status.UPDATE, Position.UPDATE_REMINDER_DATA);
+
+        if(reminder!=null) {
+            setReminderData(reminder, Position.UPDATE_REMINDER_TIME, chatId, update);
+        }else {
+            reminder = reminderService.findByStatusAndPosition(Status.UPDATE, Position.UPDATE_REMINDER_TIME);
+            setReminderTime(reminder, chatId, update);
+        }
+    }
+
+    public void updateRemindCommand(Long chatId, Update update) {
+        long reminderId;
+        Reminder reminder;
+
+        if(update.hasCallbackQuery()) {
+            if(update.getCallbackQuery().getData().contains(ButtonConstants.UPDATE_DATA) ||
+                update.getCallbackQuery().getData().contains(ButtonConstants.UPDATE_TEXT)) {
+                reminderId = Long.parseLong(update.getCallbackQuery().getData().substring(11));
+            } else {
+                System.out.println(update.getCallbackQuery().getData().substring(7));
+                reminderId = Long.parseLong(update.getCallbackQuery().getData().substring(7));
+            }
+            reminder = reminderService.findById(reminderId);
+        } else {
+            reminder = reminderService.findByStatus(Status.UPDATE);
+        }
+
+        if(reminder != null) {
+            if(reminder.getStatus().equals(Status.CREATED.toString())) {
+
+                reminder.setStatus(Status.UPDATE.toString());
+                reminderService.update(reminder);
+
+                telegramBot.sendMessage(DeleteMessage.builder().chatId(chatId)
+                    .messageId(update.getCallbackQuery().getMessage().getMessageId()).build());
+                showInformationAboutReminder(reminder, chatId, getUpdateButtons(reminder.getId()));
+
+            } else if(update.hasCallbackQuery()) {
+                if(update.getCallbackQuery().getData().contains(ButtonConstants.UPDATE_TEXT)) {
+                    telegramBot.sendMessage(
+                        SendMessage.builder()
+                            .chatId(chatId)
+                            .text(MessageConstants.REMINDER_ENTER_TEXT)
+                            .build());
+
+                    reminder.setPosition(Position.UPDATE_REMINDER_TEXT.toString());
+                    reminderService.update(reminder);
+                } else if(update.getCallbackQuery().getData().contains(ButtonConstants.UPDATE_DATA)) {
+                    telegramBot.sendMessage(SendMessage.builder()
+                        .chatId(chatId)
+                        .text(MessageConstants.REMINDER_ENTER_DATA)
+                        .build());
+
+                    reminder.setPosition(Position.UPDATE_REMINDER_DATA.toString());
+                    reminderService.update(reminder);
+                }
+            }
+        }
+
+    }
+
+    public void confirmReminderCommand(Long chatId, Update update) {
+        telegramBot.sendMessage(
+            DeleteMessage.builder().chatId(chatId).messageId(update.getCallbackQuery().getMessage().getMessageId())
+                .build());
+
+        telegramBot.sendMessage(SendMessage.builder()
+            .chatId(chatId)
+            .text("Нагадування успішно створено!")
+            .build());
+    }
 
     private void createNewRemind(Long chatId) {
         reminderService.createReminder(Reminder.builder()
             .user(userService.findUserByChatId(chatId))
-            .status(Status.IN_PROGRESS)
-            .position(Position.INPUT_REMINDER_TEXT)
+            .status(Status.IN_PROGRESS.toString())
+            .position(Position.INPUT_REMINDER_TEXT.toString())
             .build());
 
         telegramBot.sendMessage(SendMessage.builder()
@@ -111,11 +178,9 @@ public class ReminderProcessor {
     private void setReminderText(Reminder reminder, Position position, Long chatId, Update update) {
         if(update.getMessage().getText().length() <= 255) {
             reminder.setTextOfReminder(update.getMessage().getText());
-            reminder.setPosition(position);
+            reminder.setPosition(position.toString());
             reminderService.update(reminder);
 
-            telegramBot.sendMessage(
-                SendMessage.builder().chatId(chatId).text(MessageConstants.REMINDER_ENTER_DATA).build());
 
         } else {
             telegramBot.sendMessage(SendMessage.builder()
@@ -135,7 +200,7 @@ public class ReminderProcessor {
             LocalDate.parse(update.getMessage().getText(), dateFormatter);
             if(LocalDate.now().isBefore(LocalDate.parse(update.getMessage().getText(), dateFormatter)) ||
                 LocalDate.now().isEqual(LocalDate.parse(update.getMessage().getText(), dateFormatter))) {
-                reminder.setPosition(position);
+                reminder.setPosition(position.toString());
 
                 reminder.setReminderDate(
                     Date.valueOf(LocalDate.parse(update.getMessage().getText(), dateFormatter)));
@@ -162,19 +227,29 @@ public class ReminderProcessor {
     private void setReminderTime(Reminder reminder, Long chatId, Update update) {
         try {
             LocalTime time = LocalTime.parse(update.getMessage().getText(), timeFormatter);
-            if(LocalDate.now().isBefore(reminder.getReminderDate().toLocalDate())) {
+            if(!LocalDate.now().isAfter(reminder.getReminderDate().toLocalDate())) {
+                LocalDateTime localDateTime = LocalDateTime.of(reminder.getReminderDate().toLocalDate(), time);
 
-                reminder.setReminderTime(Time.valueOf(time));
-                reminder.setPosition(Position.REGISTERED);
-                reminder.setStatus(Status.CREATED);
-                reminderService.update(reminder);
+                System.out.println(localDateTime);
+                System.out.println(!localDateTime.isAfter(LocalDateTime.now()));
+                if(localDateTime.isAfter(LocalDateTime.now())) {
+                    reminder.setReminderTime(Time.valueOf(time));
+                    reminder.setPosition(Position.REGISTERED.toString());
+                    reminder.setStatus(Status.CREATED.toString());
+                    reminderService.update(reminder);
 
-                telegramBot.sendMessage(SendMessage.builder()
-                    .chatId(chatId)
-                    .text(MessageConstants.REMINDER_PRE_INFO)
-                    .build());
+                    telegramBot.sendMessage(SendMessage.builder()
+                        .chatId(chatId)
+                        .text(MessageConstants.REMINDER_PRE_INFO)
+                        .build());
 
-                showInformationAboutReminder(reminder, chatId, getUpdateDeleteButtons(reminder.getId()));
+                    showInformationAboutReminder(reminder, chatId, getUpdateDeleteButtons(reminder.getId()));
+                } else {
+                    telegramBot.sendMessage(SendMessage.builder()
+                        .chatId(chatId)
+                        .text("Вибач але час не може бути у минулому")
+                        .build());
+                }
             } else {
                 telegramBot.sendMessage(SendMessage.builder()
                     .chatId(chatId)
@@ -189,7 +264,7 @@ public class ReminderProcessor {
         }
     }
 
-    private InlineKeyboardMarkup getUpdateButtons(Long reminderId){
+    private InlineKeyboardMarkup getUpdateButtons(Long reminderId) {
 
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
 

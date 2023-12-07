@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ReminderRepository extends JpaRepository<Reminder, Long> {
-    Reminder findByUserAndPosition(User user, Position position);
-    Reminder findByUserAndStatus(User user, Status status);
+    Reminder findByUserAndPosition(User user, String position);
+    Reminder findByUserAndStatus(User user, String status);
+    Reminder findByStatus(String status);
+    Reminder findByStatusAndPosition(String status,String position);
 }

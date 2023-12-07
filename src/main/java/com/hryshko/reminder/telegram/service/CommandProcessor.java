@@ -35,9 +35,13 @@ public class CommandProcessor {
         this.userService = userService;
         commandMap.put(ButtonConstants.START, this::startCommand);
         commandMap.put(ButtonConstants.REGISTRATION, userProcessor::registrationCommand);
+        commandMap.put(ButtonConstants.USER_INFO, userProcessor::userInformationCommand);
         commandMap.put(ButtonConstants.ADD_REMINDER, reminderProcessor::createNewRemindCommand);
         commandMap.put(ButtonConstants.SHOW_REMINDERS, reminderProcessor::getAllRemindsCommand);
-        commandMap.put(ButtonConstants.USER_INFO, userProcessor::userInformationCommand);
+        commandMap.put(ButtonConstants.CONFIRM, reminderProcessor::confirmReminderCommand);
+        commandMap.put(ButtonConstants.UPDATE, reminderProcessor::updateRemindCommand);
+        commandMap.put(ButtonConstants.UPDATE_TEXT, reminderProcessor::updateReminderTextCommand);
+        commandMap.put(ButtonConstants.UPDATE_DATA, reminderProcessor::updateReminderDateCommand);
         commandMap.put(ButtonConstants.HELP, this::helpCommand);
     }
 

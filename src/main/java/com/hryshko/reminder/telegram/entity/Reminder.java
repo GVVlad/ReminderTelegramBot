@@ -40,10 +40,10 @@ public class Reminder {
     private Date reminderDate;
 
     @Column(name = "position")
-    private Position position;
+    private String position;
 
     @Column(name = "status")
-    private Status status;
+    private String status;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

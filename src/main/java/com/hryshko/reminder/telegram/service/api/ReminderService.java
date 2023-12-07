@@ -26,4 +26,6 @@ public interface ReminderService {
     Reminder findByUserAndPosition(Long userId, Position position);
 
     Reminder findByUserAndStatus(Long userId, Status status);
+    Reminder findByStatus(Status status);
+    Reminder findByStatusAndPosition(Status status,Position position);
 }

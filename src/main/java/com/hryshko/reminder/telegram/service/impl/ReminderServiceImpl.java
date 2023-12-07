@@ -78,13 +78,23 @@ public class ReminderServiceImpl implements ReminderService {
     public Reminder findByUserAndPosition(Long userId, Position position) {
         User user = userService.findUserByChatId(userId);
 
-        return repository.findByUserAndPosition(user, position);
+        return repository.findByUserAndPosition(user, position.toString());
     }
 
     @Override
     public Reminder findByUserAndStatus(Long userId, Status status) {
         User user = userService.findUserByChatId(userId);
 
-        return repository.findByUserAndStatus(user, status);
+        return repository.findByUserAndStatus(user, status.toString());
+    }
+
+    @Override
+    public Reminder findByStatus(Status status) {
+        return repository.findByStatus(status.toString());
+    }
+
+    @Override
+    public Reminder findByStatusAndPosition(Status status, Position position) {
+        return repository.findByStatusAndPosition(status.toString(),position.toString());
     }
 }
