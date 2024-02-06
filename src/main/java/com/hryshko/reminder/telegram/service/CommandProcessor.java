@@ -42,6 +42,8 @@ public class CommandProcessor {
         commandMap.put(ButtonConstants.UPDATE, reminderProcessor::updateRemindCommand);
         commandMap.put(ButtonConstants.UPDATE_TEXT, reminderProcessor::updateReminderTextCommand);
         commandMap.put(ButtonConstants.UPDATE_DATA, reminderProcessor::updateReminderDateCommand);
+        commandMap.put(ButtonConstants.RESCHEDULED,reminderProcessor::updateRemindTime);
+        commandMap.put(ButtonConstants.FINISH,reminderProcessor::finishedRemind);
         commandMap.put(ButtonConstants.HELP, this::helpCommand);
     }
 

@@ -69,6 +69,11 @@ public class TelegramBot extends TelegramLongPollingBot {
             reminderService.findByStatusAndPosition(Status.UPDATE, Position.UPDATE_REMINDER_TIME) != null) &&
             !command.equals(ButtonConstants.CONFIRM)) {
             commandProcessor.processCommand(ButtonConstants.UPDATE_DATA, chatId, update);
+        } else if(command.contains(ButtonConstants.RESCHEDULED)) {
+            commandProcessor.processCommand(ButtonConstants.RESCHEDULED, chatId, update);
+
+        } else if(command.contains(ButtonConstants.FINISH)) {
+            commandProcessor.processCommand(ButtonConstants.FINISH, chatId, update);
         } else {
             commandProcessor.processCommand(command, chatId, update);
         }

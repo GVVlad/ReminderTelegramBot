@@ -7,15 +7,22 @@ import com.hryshko.reminder.telegram.enums.Status;
 import com.hryshko.reminder.telegram.repository.ReminderRepository;
 import com.hryshko.reminder.telegram.service.api.ReminderService;
 import com.hryshko.reminder.telegram.service.api.UserService;
+import java.sql.Date;
+import java.sql.Time;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@EnableScheduling
 public class ReminderServiceImpl implements ReminderService {
 
     public final UserService userService;
@@ -70,6 +77,13 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
+    public List<Reminder> remindMe() {
+        Date date = Date.valueOf(LocalDate.now());
+        Time time = Time.valueOf(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))+":00");
+       return repository.findAllByReminderDateAndReminderTime(date,time);
+    }
+
+    @Override
     public void removeReminder(Long id) {
         repository.delete(findById(id));
     }
@@ -95,6 +109,6 @@ public class ReminderServiceImpl implements ReminderService {
 
     @Override
     public Reminder findByStatusAndPosition(Status status, Position position) {
-        return repository.findByStatusAndPosition(status.toString(),position.toString());
+        return repository.findByStatusAndPosition(status.toString(), position.toString());
     }
 }
