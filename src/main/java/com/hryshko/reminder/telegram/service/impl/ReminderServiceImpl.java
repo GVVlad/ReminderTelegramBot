@@ -77,7 +77,7 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
-    public List<Reminder> remindMe() {
+    public List<Reminder> getActualRemind() {
         Date date = Date.valueOf(LocalDate.now());
         Time time = Time.valueOf(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))+":00");
        return repository.findAllByReminderDateAndReminderTime(date,time);

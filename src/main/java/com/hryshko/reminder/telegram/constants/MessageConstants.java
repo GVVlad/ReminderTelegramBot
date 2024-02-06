@@ -18,5 +18,7 @@ public class MessageConstants {
     public final static String REMINDER_ENTER_TIME = "Надішли годину о котрій необдіно сповістити тебе у форматі \"ГГ:ХХ\"";
     public final static String REMINDER_PRE_INFO = "Інформація про нагадування:";
     public final static String REMINDER_INFO = "<b>Текст нагадування:</b>\n %s \n\n<b>Час нагадування:</b> %s o %s";
+    public final static String GET_ALL_REMINDERS = "Ось ваш список усіх актуальних нагадувань!";
+    public final static String EMPTY_LIST_OF_REMINDERS = "Спершу додай хоча б одине нагадування \uD83D\uDE42";
 
 }

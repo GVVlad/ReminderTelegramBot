@@ -39,15 +39,14 @@ public class TelegramBot extends TelegramLongPollingBot {
             chatId = update.getMessage().getChatId();
             if(update.getMessage().hasText()) {
                 command = update.getMessage().getText();
-                System.out.println(command);
+                System.out.println("FROM UPDATE: "+command);
             } else {
                 command = ButtonConstants.REGISTRATION;
             }
         } else {
             chatId = update.getCallbackQuery().getFrom().getId();
             command = update.getCallbackQuery().getData();
-            System.out.println(command);
-
+            System.out.println("FROM CALLBACK: "+command);
         }
 
         if(command.equals(ButtonConstants.START)) {
@@ -71,10 +70,13 @@ public class TelegramBot extends TelegramLongPollingBot {
             commandProcessor.processCommand(ButtonConstants.UPDATE_DATA, chatId, update);
         } else if(command.contains(ButtonConstants.RESCHEDULED)) {
             commandProcessor.processCommand(ButtonConstants.RESCHEDULED, chatId, update);
-
         } else if(command.contains(ButtonConstants.FINISH)) {
             commandProcessor.processCommand(ButtonConstants.FINISH, chatId, update);
-        } else {
+        } else if(command.contains(ButtonConstants.REMINDER)){
+            commandProcessor.processCommand(ButtonConstants.REMINDER, chatId, update);
+        }else if(command.contains(ButtonConstants.CONFIRM)){
+            commandProcessor.processCommand(ButtonConstants.CONFIRM, chatId, update);
+        } else  {
             commandProcessor.processCommand(command, chatId, update);
         }
     }

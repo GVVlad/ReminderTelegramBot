@@ -1,12 +1,11 @@
 package com.hryshko.reminder.telegram.constants;
 
 public class ButtonConstants {
-    public final static String ADD_REMINDER = "Створити нагадування \u2795";
+    public final static String ADD_REMINDER = "Нове нагадування \u2795";
     public final static String SHOW_REMINDERS = "Ваші нагадування \uD83D\uDCD1";
     public final static String HELP = "Допомога \uD83C\uDD98";
     public final static String USER_INFO = "Особиста інформація \u2139";
     public final static String SEND_PHONE = "Відправити свій номер телефону";
-
     public final static String REGISTRATION_COMMAND = "Реєстрація";
     public final static String REGISTRATION = "/reg";
 
@@ -21,7 +20,7 @@ public class ButtonConstants {
 
 
     public final static String DELETE_COMMAND = "Видалити";
-    public final static String DELETE = "/update";
+    public final static String DELETE = "/delete";
 
     public final static String RESCHEDULED_COMMAND = "Відкласти на 5 хв.";
     public final static String RESCHEDULED = "/rescheduled";
@@ -32,6 +31,7 @@ public class ButtonConstants {
     public final static String FINISH_COMMAND = "Підтвердити";
     public final static String FINISH = "/finish";
     public final static String START = "/start";
-
-
+    public final static String REMINDER = "/remind";
+    public final static String TURN_BACK_COMMAND = "Повернутися назад";
+    public final static String TURN_BACK= "/turnToList";
 }

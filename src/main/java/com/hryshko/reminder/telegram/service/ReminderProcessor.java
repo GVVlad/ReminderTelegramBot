@@ -23,6 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -34,6 +35,7 @@ public class ReminderProcessor {
     private final TelegramBot telegramBot;
     private final UserService userService;
     private final ReminderService reminderService;
+    private final KeyboardProcessor keyboardProcessor;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -63,7 +65,7 @@ public class ReminderProcessor {
 
         if(reminder != null) {
             setReminderText(reminder, Position.REGISTERED, chatId, update);
-            showInformationAboutReminder(reminder, chatId, getUpdateButtons(reminder.getId()));
+            collectInformationAboutReminder(reminder, chatId, keyboardProcessor.getUpdateButtons(reminder.getId()));
         }
     }
 
@@ -87,7 +89,6 @@ public class ReminderProcessor {
                 update.getCallbackQuery().getData().contains(ButtonConstants.UPDATE_TEXT)) {
                 reminderId = Long.parseLong(update.getCallbackQuery().getData().substring(11));
             } else {
-                System.out.println(update.getCallbackQuery().getData().substring(7));
                 reminderId = Long.parseLong(update.getCallbackQuery().getData().substring(7));
             }
             reminder = reminderService.findById(reminderId);
@@ -103,7 +104,8 @@ public class ReminderProcessor {
 
                 telegramBot.sendMessage(DeleteMessage.builder().chatId(chatId)
                     .messageId(update.getCallbackQuery().getMessage().getMessageId()).build());
-                showInformationAboutReminder(reminder, chatId, getUpdateButtons(reminder.getId()));
+
+                collectInformationAboutReminder(reminder, chatId, keyboardProcessor.getUpdateButtons(reminder.getId()));
 
             } else if(update.hasCallbackQuery()) {
                 if(update.getCallbackQuery().getData().contains(ButtonConstants.UPDATE_TEXT)) {
@@ -126,10 +128,15 @@ public class ReminderProcessor {
                 }
             }
         }
-
     }
 
     public void confirmReminderCommand(Long chatId, Update update) {
+        if(!update.getCallbackQuery().getData().equals(ButtonConstants.CONFIRM)) {
+            Long reminderId = Long.valueOf(update.getCallbackQuery().getData().replace(ButtonConstants.CONFIRM, ""));
+            Reminder reminder = reminderService.findById(reminderId);
+            reminder.setStatus(Status.CREATED.toString());
+            reminderService.update(reminder);
+        }
         telegramBot.sendMessage(
             DeleteMessage.builder().chatId(chatId).messageId(update.getCallbackQuery().getMessage().getMessageId())
                 .build());
@@ -140,22 +147,52 @@ public class ReminderProcessor {
             .build());
     }
 
-    private void createNewRemind(Long chatId) {
-        reminderService.createReminder(Reminder.builder()
-            .user(userService.findUserByChatId(chatId))
-            .status(Status.IN_PROGRESS.toString())
-            .position(Position.INPUT_REMINDER_TEXT.toString())
+    @Scheduled(fixedDelay = 60000)
+    public void remind() {
+        List<Reminder> reminders = reminderService.getActualRemind();
+        reminders.forEach(reminder -> {
+                telegramBot.sendMessage(SendMessage.builder()
+                    .text(reminder.getTextOfReminder())
+                    .chatId(reminder.getUser().getChatId())
+                    .replyMarkup(keyboardProcessor.getReScheduledButtons(reminder.getId()))
+                    .build());
+            }
+        );
+    }
+
+    public void getAllRemindsCommand(Long chatId, Update update) {
+        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        List<Reminder> reminders = reminderService.listRemindersByUsersId(chatId);
+
+        if(!reminders.isEmpty()) {
+            reminders.forEach(reminder -> {
+                keyboard.add(Collections.singletonList(InlineKeyboardButton.builder()
+                    .text(reminder.getTextOfReminder())
+                    .callbackData(ButtonConstants.REMINDER + reminder.getId())
+                    .build()));
+            });
+            keyboardMarkup.setKeyboard(keyboard);
+
+            telegramBot.sendMessage(SendMessage.builder()
+                .chatId(chatId)
+                .text(MessageConstants.GET_ALL_REMINDERS)
+                .replyMarkup(keyboardMarkup)
+                .build());
+        } else {
+            telegramBot.sendMessage(SendMessage.builder()
+                .chatId(chatId)
+                .text(MessageConstants.EMPTY_LIST_OF_REMINDERS)
+                .build());
+        }
+    }
+
+    public void turnBackToAllReminds(Long chatId, Update update) {
+        telegramBot.sendMessage(DeleteMessage.builder()
+            .chatId(chatId).messageId(update.getCallbackQuery().getMessage().getMessageId())
             .build());
 
-        telegramBot.sendMessage(SendMessage.builder()
-            .chatId(chatId)
-            .text(MessageConstants.REMINDER_REGISTRATION)
-            .build());
-
-        telegramBot.sendMessage(SendMessage.builder()
-            .chatId(chatId)
-            .text(MessageConstants.REMINDER_ENTER_TEXT)
-            .build());
+        getAllRemindsCommand(chatId, update);
     }
 
     public void updateRemindTime(Long chatId, Update update) {
@@ -176,7 +213,7 @@ public class ReminderProcessor {
             .build());
     }
 
-    public void finishedRemind(Long chatId, Update update){
+    public void finishedRemind(Long chatId, Update update) {
         telegramBot.sendMessage(DeleteMessage.builder()
             .chatId(chatId)
             .messageId(update.getCallbackQuery().getMessage().getMessageId())
@@ -186,8 +223,23 @@ public class ReminderProcessor {
         reminderService.removeReminder(Long.valueOf(reminderId));
     }
 
+    public void showRemind(Long chatId, Update update) {
+        String remindId = update.getCallbackQuery().getData().replace(ButtonConstants.REMINDER, "");
+        Reminder reminder = reminderService.findById(Long.valueOf(remindId));
 
-    public void showInformationAboutReminder(Reminder reminder, Long chatId, InlineKeyboardMarkup keyboard) {
+        String time = reminder.getReminderTime().toLocalTime().format(timeFormatter);
+        String date = reminder.getReminderDate().toString();
+
+        telegramBot.sendMessage(EditMessageText.builder()
+            .messageId(update.getCallbackQuery().getMessage().getMessageId())
+            .chatId(chatId)
+            .text(String.format(MessageConstants.REMINDER_INFO, reminder.getTextOfReminder(), date, time))
+            .parseMode("HTML")
+            .replyMarkup(keyboardProcessor.getUpdateDeleteTurnBackButtons(reminder.getId()))
+            .build());
+    }
+
+    private void collectInformationAboutReminder(Reminder reminder, Long chatId, InlineKeyboardMarkup keyboard) {
         String time = reminder.getReminderTime().toLocalTime().format(timeFormatter);
         String date = reminder.getReminderDate().toString();
         String answer = String.format(MessageConstants.REMINDER_INFO, reminder.getTextOfReminder(), date, time);
@@ -259,8 +311,6 @@ public class ReminderProcessor {
             if(!LocalDate.now().isAfter(reminder.getReminderDate().toLocalDate())) {
                 LocalDateTime localDateTime = LocalDateTime.of(reminder.getReminderDate().toLocalDate(), time);
 
-                System.out.println(localDateTime);
-                System.out.println(!localDateTime.isAfter(LocalDateTime.now()));
                 if(localDateTime.isAfter(LocalDateTime.now())) {
                     reminder.setReminderTime(Time.valueOf(time));
                     reminder.setPosition(Position.REGISTERED.toString());
@@ -272,7 +322,8 @@ public class ReminderProcessor {
                         .text(MessageConstants.REMINDER_PRE_INFO)
                         .build());
 
-                    showInformationAboutReminder(reminder, chatId, getUpdateDeleteButtons(reminder.getId()));
+                    collectInformationAboutReminder(reminder, chatId,
+                        keyboardProcessor.getUpdateDeleteConfirmButtons(reminder.getId()));
                 } else {
                     telegramBot.sendMessage(SendMessage.builder()
                         .chatId(chatId)
@@ -293,100 +344,22 @@ public class ReminderProcessor {
         }
     }
 
-    private InlineKeyboardMarkup getUpdateButtons(Long reminderId) {
-
-        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-
-        List<InlineKeyboardButton> row = new ArrayList<>();
-        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-
-        row.add(InlineKeyboardButton.builder()
-            .text(ButtonConstants.UPDATE_TEXT_COMMAND)
-            .callbackData(ButtonConstants.UPDATE_TEXT + reminderId)
+    private void createNewRemind(Long chatId) {
+        reminderService.createReminder(Reminder.builder()
+            .user(userService.findUserByChatId(chatId))
+            .status(Status.IN_PROGRESS.toString())
+            .position(Position.INPUT_REMINDER_TEXT.toString())
             .build());
 
-        row.add(InlineKeyboardButton.builder()
-            .text(ButtonConstants.UPDATE_DATA_COMMAND)
-            .callbackData(ButtonConstants.UPDATE_DATA + reminderId)
+        telegramBot.sendMessage(SendMessage.builder()
+            .chatId(chatId)
+            .text(MessageConstants.REMINDER_REGISTRATION)
             .build());
 
-        keyboard.add(row);
-
-        keyboard.add(Collections.singletonList(InlineKeyboardButton.builder()
-            .text(ButtonConstants.CONFIRM_COMMAND)
-            .callbackData(ButtonConstants.CONFIRM)
-            .build()));
-
-        keyboardMarkup.setKeyboard(keyboard);
-
-        return keyboardMarkup;
+        telegramBot.sendMessage(SendMessage.builder()
+            .chatId(chatId)
+            .text(MessageConstants.REMINDER_ENTER_TEXT)
+            .build());
     }
 
-    public InlineKeyboardMarkup getUpdateDeleteButtons(Long reminderId) {
-        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-
-        List<InlineKeyboardButton> row = new ArrayList<>();
-        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-
-        row.add(InlineKeyboardButton.builder()
-            .text(ButtonConstants.UPDATE_COMMAND)
-            .callbackData(ButtonConstants.UPDATE + reminderId)
-            .build());
-
-        row.add(InlineKeyboardButton.builder()
-            .text(ButtonConstants.DELETE_COMMAND)
-            .callbackData(ButtonConstants.DELETE + reminderId)
-            .build());
-
-        keyboard.add(row);
-
-        keyboard.add(Collections.singletonList(InlineKeyboardButton.builder()
-            .text(ButtonConstants.CONFIRM_COMMAND)
-            .callbackData(ButtonConstants.CONFIRM)
-            .build()));
-
-        keyboardMarkup.setKeyboard(keyboard);
-
-        return keyboardMarkup;
-    }
-
-    private InlineKeyboardMarkup getReScheduledButtons(Long reminderId) {
-
-        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-
-        List<InlineKeyboardButton> row = new ArrayList<>();
-        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-
-        row.add(InlineKeyboardButton.builder()
-            .text(ButtonConstants.RESCHEDULED_COMMAND)
-            .callbackData(ButtonConstants.RESCHEDULED + reminderId)
-            .build());
-
-        row.add(InlineKeyboardButton.builder()
-            .text(ButtonConstants.FINISH_COMMAND)
-            .callbackData(ButtonConstants.FINISH + reminderId)
-            .build());
-
-        keyboard.add(row);
-
-        keyboardMarkup.setKeyboard(keyboard);
-
-        return keyboardMarkup;
-    }
-
-    @Scheduled(fixedDelay = 60000)
-    public void remind() {
-        List<Reminder> reminders = reminderService.remindMe();
-        reminders.forEach(reminder -> {
-                telegramBot.sendMessage(SendMessage.builder()
-                    .text(reminder.getTextOfReminder())
-                    .chatId(reminder.getUser().getChatId())
-                    .replyMarkup(getReScheduledButtons(reminder.getId()))
-                    .build());
-            }
-        );
-    }
-
-    public void getAllRemindsCommand(Long chatId, Update update) {
-    }
 }

@@ -22,7 +22,7 @@ public interface ReminderService {
     Reminder findByTextName(String text);
 
     void removeReminder(Long id);
-    List<Reminder> remindMe();
+    List<Reminder> getActualRemind();
 
     Reminder findByUserAndPosition(Long userId, Position position);
 
